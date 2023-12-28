@@ -1,43 +1,44 @@
-﻿using ReactiveUI;
-using ReactiveUI.Maui;
+﻿namespace MauiCleanTest;
 
-namespace MauiCleanTest;
-
-public partial class MainPage : ReactiveContentPage<MainPageViewModel>
+public partial class MainPage : ContentPage
 {
-	int count = 0;
+	private List<Type> _controls;
+	private string[] _controlNames;
 
 	public MainPage()
 	{
-		BindingContext = new MainPageViewModel();
 		InitializeComponent();
 	}
 
-	~MainPage()
-	{
-        Console.WriteLine("Cleanup Main Page");
-    }
-
 	private async void OnCounterClicked(object sender, EventArgs e)
 	{
-		var controls =
-			AppDomain.CurrentDomain.GetAssemblies()
-				.SelectMany(t => t.GetTypes())
-				.Where(t => t.IsClass && t.Namespace == "Microsoft.Maui.Controls" && t.BaseType == typeof(View) && t.GetConstructor(Type.EmptyTypes) is not null)
-				.ToList();
+		try
+		{
+			_controls ??=
+				AppDomain.CurrentDomain.GetAssemblies()
+					.SelectMany(t => t.GetTypes())
+					.Where(t => t.IsClass && t.Namespace == "Microsoft.Maui.Controls" && t.BaseType == typeof(View) && t.GetConstructor(Type.EmptyTypes) is not null)
+					.ToList();
 
-        var result =
-			await this.DisplayActionSheet(
-				"Select a view",
-				"NOAP",
-				null,
-				controls.Select(x => x.Name).ToArray());
+			_controlNames ??= _controls.Select(x => x.Name).ToArray();
 
-		var matchingView = controls.FirstOrDefault(x => x.Name.Equals(result));
+			var result =
+				await this.DisplayActionSheet(
+					"Select a view",
+					"NOAP",
+					null,
+					_controlNames);
 
-		View view = matchingView is not null ? Activator.CreateInstance(matchingView) as View : new ContentView();
+			var matchingView = _controls.FirstOrDefault(x => x.Name.Equals(result));
 
-		await AppShell.Current.Navigation.PushAsync(new PageWithView(view));
+			View view = matchingView is not null ? Activator.CreateInstance(matchingView) as View : new ContentView();
+
+			await AppShell.Current.Navigation.PushAsync(new PageWithView(view));
+		}
+		catch (Exception ex)
+		{
+			await DisplayAlert("Error", ex.Message, "OK");
+		}
 	}
 
     void Button_Clicked(System.Object sender, System.EventArgs e)
@@ -55,10 +56,3 @@ public partial class MainPage : ReactiveContentPage<MainPageViewModel>
         MemInfo.Text = $"Before: {prememInfo.TotalCommittedBytes/Math.Pow(1024.0,2):N2} MB / Pinned After: {postmemInfo.TotalCommittedBytes/Math.Pow(1024.0,2):N2} MB";
     }
 }
-
-public class MainPageViewModel : ReactiveObject
-{
-
-}
-
-
