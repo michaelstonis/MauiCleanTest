@@ -53,6 +53,6 @@ public partial class MainPage : ContentPage
 
 		var postmemInfo = GC.GetGCMemoryInfo();
 
-        MemInfo.Text = $"Before: {prememInfo.TotalCommittedBytes/Math.Pow(1024.0,2):N2} MB / Pinned After: {postmemInfo.TotalCommittedBytes/Math.Pow(1024.0,2):N2} MB";
+        MemInfo.Text = $"Before: {prememInfo.TotalCommittedBytes/Math.Pow(1024.0,2):N2} MB / After: {postmemInfo.TotalCommittedBytes/Math.Pow(1024.0,2):N2} MB";
     }
 }
